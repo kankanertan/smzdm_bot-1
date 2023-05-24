@@ -18,12 +18,14 @@
 - 2023-03-01, 支持青龙面板且支持多账号
 - 2023-03-01, 仅需要`ANDROID_COOKIE`和`SK`两个变量，自动生成`USER_AGENT`和`TOKEN`, 引入随机休眠，减小被封概率
 - 2023-03-02, 新增每日抽奖，参考 hex-ci 的[思路](https://github.com/hex-ci/smzdm_script/blob/main/smzdm_lottery.js)
+- 2023-04-06, 新增企业微信BOT-WEBHOOK通知推送方式，仅需要`ANDROID_COOKIE`一个变量, `SK`改为可选变量. 如果能够通过抓包抓到，最好填上.
+- 2023-04-23，更新抽奖功能
 
 ## 1. 实现功能
 
 - 每日签到, 额外奖励，随机奖励
 - 多种运行方式: GitHub Action, 本地运行，docker， 青龙面板
-- 多种通知方式: `pushplus`, `server酱`, `telegram bot`(支持自定义反代`Telegram Bot API`. [搭建教程](https://anerg.com/2022/07/25/reverse-proxy-telegram-bot-api-using-cloudflare-worker.html))
+- 多种通知方式: `pushplus`, `server酱`,`企业微信bot-webhook`, `telegram bot`(支持自定义反代`Telegram Bot API`. [搭建教程](https://anerg.com/2022/07/25/reverse-proxy-telegram-bot-api-using-cloudflare-worker.html))
 - 支持多账号(需配置`config.toml`)
 
 ## 2. 配置
@@ -35,11 +37,12 @@
 ```conf
 # Cookie
 ANDROID_COOKIE = ""
-SK = ""
+SK = "" # 可选，如果抓包抓到最好设置
 
 # Notification
 PUSH_PLUS_TOKEN = ""
 SC_KEY = ""
+WECOM_BOT_WEBHOOK = ""
 TG_BOT_TOKEN = ""
 TG_USER_ID = ""
 
@@ -58,19 +61,21 @@ SCH_MINUTE=
 ```toml
 [user.A]
 ANDROID_COOKIE = ""
-SK = ""
+SK = "" # 可选，如果抓包抓到最好设置
 
 [user.B]
 # Disable userB的签到. 不配置此参数默认启用该用户
 Disable = true
 ANDROID_COOKIE = ""
-SK = ""
+SK = "" # 可选，如果抓包抓到最好设置
 
 [notify]
 PUSH_PLUS_TOKEN = ""
 SC_KEY = ""
+WECOM_BOT_WEBHOOK = ""
 TG_BOT_TOKEN = ""
 TG_USER_ID = ""
+TG_BOT_API = ""
 ```
 
 ## 3. 使用
@@ -78,7 +83,7 @@ TG_USER_ID = ""
 ### 3.1 青龙面板
 
 ```
-ql repo https://github.com/Chasing66/smzdm_bot "smzdm_ql.py"
+ql repo https://github.com/Chasing66/smzdm_bot.git "smzdm_ql.py"
 ```
 
 默认情况下从环境变量读取配置,仅支持单用户.
@@ -145,15 +150,16 @@ schedule:
 
 ### 4.1 手机抓包
 
-> 抓包有一定门槛，请酌情尝试.
+> 抓包有一定门槛，请自行尝试! 如果实在解决不了，请我喝瓶可乐可以帮忙
 
 抓包工具可使用 HttpCanary，教程参考[HttpCanary 抓包](https://juejin.cn/post/7177682063699968061)
 
 1. 按照上述教程配置好 HttpCanary
 2. 开始抓包，并打开什么值得买 APP
-3. 过滤域名为`user-api.smzdm.com`的 post 请求
-4. 点击右上角分享，复制 cURL，转换 curl 请求为 python 格式，[方法](https://curlconverter.com/)
-5. 填入转换后的`Cookies`和`sk`两个值
+3. 过滤`https://user-api.smzdm.com/checkin`的`post`请求并查看
+4. 点击右上角分享，分享 cURL，复制保存该命令
+5. 将复制的 curl 命令转换为 python 格式，[方法](https://curlconverter.com/)
+6. 填入转换后的`Cookies`和`sk`. `Cookies`在`headers`里，`sk`在`data`里, `sk`是可选项
 
 ## 5. Stargazers over time
 
